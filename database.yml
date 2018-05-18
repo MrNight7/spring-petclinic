@@ -15,7 +15,7 @@
 
   tasks:
       - name: Install DataBase
-        apt: pkg={{ item }} state=present update_cache=yes cache_valid_time=3600
+        apt: pkg={{ item }} state=present update_cache=yes
         with_items:
             - mysql-server-5.7
             - mysql-client-5.7
@@ -47,35 +47,24 @@
       - name: Create new database user
         mysql_user:
             name: "{{ lookup('env','DB_USER') }}"
-            host: "{{ lookup('env','DB_REMOTE_USER_HOST') }}"
+            host: "{{ lookup('env','DB_HOST') }}"
             password: "{{ lookup('env','DB_PASS') }}"
             priv: "{{ lookup('env','DB_NAME') }}.*:ALL,GRANT"
             state: present
 
       - name: Get DB IP address
-        shell: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=Database Worker' --query 'Reservations[*].Instances[*].PrivateIpAddress' --output=text"
+        shell: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=Database' --query 'Reservations[*].Instances[*].PrivateIpAddress' --output=text"
         environment:
           AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
           AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
           AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
-        register: db_host
-
-      - name: Copy global cnf file
-        template:
-            src: mysql.cnf.j2
-            dest: /etc/mysql/my.cnf
-        register: gcnf
-
-      - name: Restart MySQL server
-        become: true
-        service: name=mysql state=restarted
-        when: gcnf.changed
+        register: database
 
       - name: Check that user can connect to database
         mysql_db:
             login_user: "{{ lookup('env','DB_USER') }}"
             login_password: "{{ lookup('env','DB_PASS') }}"
-            login_host: "{{ db_host.stdout }}"
+            login_host: "{{ database.stdout }}"
             login_port: "{{ lookup('env','DB_PORT') | int }}"
             name: "{{ lookup('env','DB_NAME') }}"
             state: present
