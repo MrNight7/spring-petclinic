@@ -17,8 +17,6 @@ pipeline {
         }
 
         stage('Provision') {
-            
-            failFast true
                 
                 stage ('Database') {
                     
