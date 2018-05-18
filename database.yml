@@ -54,6 +54,6 @@
             login_user: "{{ lookup('env','DB_USER') }}"
             login_host: "{{ ip.stdout }}"
             login_password: "{{ lookup('env','DB_PASS') }}"
-            login_port: "{{ lookup('env','DB_PORT') }}"
+            login_port: "{{ lookup('env','DB_PORT') | int }}"
             name: "{{ lookup('env','DB_NAME') }}"
             state: present
