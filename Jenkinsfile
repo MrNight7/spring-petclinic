@@ -17,7 +17,9 @@ pipeline {
         }
 
         stage('Provision') {
-                
+            failFast true
+            parallel {
+
                 stage ('Database') {
                     
                     agent { label 'database' }
@@ -40,6 +42,7 @@ pipeline {
                                     playbook: 'application.yml')
                         }
                 }
+            }
         }
 
         stage ('Terminate instances') {
