@@ -34,8 +34,6 @@
         args:
           chdir: "/home/{{ lookup('env','APP_USER') }}/{{ lookup('env','PROJECT_DIR') }}/"
         become_user: "{{ lookup('env','APP_USER') }}"
-        async: 1000
-        poll: 0
         environment:
           DB_HOST: '{{ database.stdout }}'
           DB_USER: "{{ lookup('env','DB_USER') }}"
@@ -46,6 +44,12 @@
       - name: Lookup IP Public
         ipify_facts:
         register: ip
+
+      - name: Wait for the application to start
+        wait_for:
+          timeout: 60
+          host: '{{ ip.ansible_facts.ipify_public_ip }}'
+          port: 8080
 
       - name: Check Healt
         uri:
