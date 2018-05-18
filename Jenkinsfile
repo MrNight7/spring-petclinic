@@ -27,7 +27,7 @@ pipeline {
                     agent { label 'database' }
                     
                         steps {
-                            sh 'wget ttps://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
+                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
                             ansiblePlaybook(
                                     playbook: 'database.yml')
                                }
