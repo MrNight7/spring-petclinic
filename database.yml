@@ -58,13 +58,23 @@
           AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
           AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
           AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
-        register: database
+          
+      - name: Add IP
+        shell: echo | '
+        bind-address = 0.0.0.0
+        ' >> /etc/mysql/my.cnf
+        register: add
+
+      - name: Restart MySQL server
+        become: true
+        service: name=mysql state=restarted
+        when: add.changed
 
       - name: Check that user can connect to database
         mysql_db:
             login_user: "{{ lookup('env','DB_USER') }}"
             login_password: "{{ lookup('env','DB_PASS') }}"
-            login_host: "{{ database.stdout }}"
-            login_port: "{{ lookup('env','DB_PORT') }}"
+            login_host: "{{ db_host.stdout }}"
+            login_port: "{{ lookup('env','DB_PORT') | int }}"
             name: "{{ lookup('env','DB_NAME') }}"
             state: present
