@@ -1,0 +1,7 @@
+[Service]
+Type=forking
+PIDFile=/var/run/spring/%i.pid
+ExecStart=/usr/bin/java -jar $HOME/$PROJECT_DIR/spring.jar
+
+[Install]
+WantedBy=multi-user.target
