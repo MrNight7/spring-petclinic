@@ -5,16 +5,8 @@
   become: yes
   gather_facts: false
 
-  pre_tasks:
-      - name: Install Python 2.x
-        raw: test -e /usr/bin/python || (apt update && apt install -y python-simplejson)
-        register: output
-        changed_when: output.stdout != ""
-      - name: Gathering Facts
-        setup:
-
   tasks:
-      - name: Install DataBase
+      - name: Install MySQL
         apt: pkg={{ item }} state=present update_cache=yes
         with_items:
             - mysql-server-5.7
@@ -58,7 +50,7 @@
           AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
           AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
           AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
-          register: database
+        register: database
           
       - name: Copy my.cnf file
         template:
