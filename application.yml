@@ -61,9 +61,9 @@
         debug: msg='Build Work!'
         when: health.json.status == "UP"
         
-#      - name: Install startup
-#        template: src=spring.service dest=/etc/systemd/system/spring.service
-#        become_user: "{{ lookup('env','APP_USER') }}"
-#
-#      - name: Enable Startap
-#         systemd: state=started name=spring daemon_reload=no
+      - name: Install startup
+        template: src=spring.service dest=/etc/systemd/system/spring.service
+        become_user: "{{ lookup('env','APP_USER') }}"
+
+      - name: Enable Startap
+          systemd: state=started name=spring daemon_reload=no
