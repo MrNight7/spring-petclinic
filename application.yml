@@ -64,6 +64,7 @@
       - name: Install startup
         template: src=spring.service dest=/etc/systemd/system/spring.service
         become_user: "{{ lookup('env','APP_USER') }}"
-
-      - name: Enable Startap
-          systemd: state=started name=spring daemon_reload=no
+      
+      - systemd:
+          name: spring
+          enabled: yes
