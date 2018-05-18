@@ -1,9 +1,7 @@
 ---
-- hosts: localhost
+- hosts: 127.0.0.1
   connection: local
-  name: Install MySQL database
   become: yes
-  gather_facts: false
 
   tasks:
       - name: Install MySQL
@@ -41,7 +39,7 @@
             name: "{{ lookup('env','DB_USER') }}"
             host: "{{ lookup('env','DB_HOST') }}"
             password: "{{ lookup('env','DB_PASS') }}"
-            priv: "{{ lookup('env','DB_NAME') }}.*:ALL,GRANT"
+            priv: "{{ lookup('env','DB_NAME') }}.*:ALL"
             state: present
 
       - name: Get DB IP address
@@ -63,11 +61,11 @@
         service: name=mysql state=restarted
         when: mycnf.changed
 
-      - name: Check that user can connect to database
+      - name: Connect DB
         mysql_db:
             login_user: "{{ lookup('env','DB_USER') }}"
             login_password: "{{ lookup('env','DB_PASS') }}"
             login_host: "{{ database.stdout }}"
-            login_port: "{{ lookup('env','DB_PORT') | int }}"
+            login_port: "{{ lookup('env','DB_PORT') }}"
             name: "{{ lookup('env','DB_NAME') }}"
             state: present
