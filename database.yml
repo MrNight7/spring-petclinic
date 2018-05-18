@@ -41,3 +41,19 @@
         service: name=mysql state=restarted
         when: mycnf.changed
         
+      - name: Lookup IP
+        shell: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=Database' --query 'Reservations[*].Instances[*].PrivateIpAddress' --output=text"
+        environment:
+          AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+          AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
+          AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
+        register: ip
+
+      - name: Connect DB
+        mysql_db:
+            login_user: "{{ lookup('env','DB_USER') }}"
+            login_host: "{{ ip.stdout }}"
+            login_password: "{{ lookup('env','DB_PASS') }}"
+            login_port: "{{ lookup('env','DB_PORT') | int }}"
+            name: "{{ lookup('env','DB_NAME') }}"
+            state: present
