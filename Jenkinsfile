@@ -34,6 +34,7 @@ pipeline {
                     
                 steps {
                     sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
+                    sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/spring.service'
                     ansiblePlaybook(
                             playbook: 'application.yml')
                 }
