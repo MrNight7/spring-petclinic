@@ -34,7 +34,8 @@
         args:
           chdir: "/home/{{ lookup('env','APP_USER') }}/{{ lookup('env','PROJECT_DIR') }}/"
         become_user: "{{ lookup('env','APP_USER') }}"
-        timeout: 60
+        async: 1000
+        poll: 0
         environment:
           DB_HOST: '{{ database.stdout }}'
           DB_USER: "{{ lookup('env','DB_USER') }}"
