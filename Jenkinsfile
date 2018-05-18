@@ -28,6 +28,7 @@ pipeline {
                     
                         steps {
                             sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
+                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/my.cnf'
                             ansiblePlaybook(
                                     playbook: 'database.yml')
                                }
