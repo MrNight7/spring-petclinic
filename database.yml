@@ -17,17 +17,6 @@
             state: started
             enabled: true
 
-      - name: Removes all anonymous user accounts
-        mysql_user:
-            name: ''
-            host_all: yes
-            state: absent
-
-      - name: Removes test database
-        mysql_db:
-            name: test
-            state: absent
-
       - name: Create DB
         mysql_db:
             name: "{{ lookup('env','DB_NAME') }}"
