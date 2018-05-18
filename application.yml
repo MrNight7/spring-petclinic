@@ -29,7 +29,7 @@
           AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
         register: database
 
-      - name: Run
+      - name: Run Build
         shell: 'java -jar spring.jar &'
         args:
           chdir: "/home/{{ lookup('env','APP_USER') }}/{{ lookup('env','PROJECT_DIR') }}/"
@@ -45,9 +45,9 @@
         ipify_facts:
         register: ip
 
-      - name: Wait for the application to start
+      - name: Pause 30 sec
         wait_for:
-          timeout: 60
+          timeout: 30
           host: '{{ ip.ansible_facts.ipify_public_ip }}'
           port: 8080
 
