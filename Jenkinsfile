@@ -1,42 +1,46 @@
 pipeline {
-
-    agent none
+    
+    agent any
     
     stages {
-
+        
         stage ('Build') {
+            
             agent { label 'master' }
             tools { maven 'Maven352' }
+            
                 steps {
                     checkout scm
                     sh 'mvn package'
                     sh 'aws s3 cp target/spring*.jar s3://vmerh/spring.jar'
-//                    sh """aws ec2 terminate-instances --instance-ids \
-//                        \$(curl -s http://169.254.169.254/latest/meta-data/instance-id)"""
                 }
         }
 
-        stage('All tests') {
+        stage('Provision') {
+            
             failFast true
+            
             parallel {
                 
-                stage ('Database Worker') {
-                    agent { label 'db' }
+                stage ('Database') {
+                    
+                    agent { label 'database' }
+                    
                         steps {
-                            sh 'curl -O https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/ec2/db-playbook.yml'
-                            sh 'curl -O https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/ec2/mysql.cnf.j2'
+                            sh 'wget ttps://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
                             ansiblePlaybook(
-                                    playbook: 'db-playbook.yml')
+                                    playbook: 'database.yml')
                                }
                 }
 
-                stage ('Application Worker') {
-                    agent { label 'app' }
+                stage ('Application') {
+                    
+                    agent { label 'application' }
+                    
                         steps {
-                            sh 'curl -O https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/ec2/app-playbook.yml'
+                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
                                 ansiblePlaybook(
-                                    playbook: 'app-playbook.yml')
-                            sh 'aws s3 mv s3://vmerh/spring.jar s3://vmerh/spring-${BUILD_ID}-${GIT_COMMIT}.jar'
+                                    playbook: 'application.yml')
                         }
                 }
             }
