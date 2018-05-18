@@ -1,0 +1,96 @@
+---
+- hosts: localhost
+  connection: local
+  name: Install application
+  become: yes
+  gather_facts: false
+
+  pre_tasks:
+      - name: Install Python 2.x
+        raw: test -e /usr/bin/python || (apt update && apt install -y python-simplejson)
+        register: output
+        changed_when: output.stdout != ""
+      - name: Gathering Facts
+        setup:
+
+  tasks:
+      - name: Create a non root user
+        user:
+          name: "{{ lookup('env','APP_USER') }}"
+          password: "{{ lookup('env','APP_PASS') }}"
+
+      - name: Create a project directory
+        file:
+          path: "/home/{{ lookup('env','APP_USER') }}/{{ lookup('env','PROJECT_DIR') }}/"
+          state: directory
+          owner: "{{ lookup('env','APP_USER') }}"
+          group: "{{ lookup('env','APP_USER') }}"
+          mode: 0755
+        become_user: "{{ lookup('env','APP_USER') }}"
+
+      - name: Copy the jar file to the home folder
+        shell: "aws s3 cp s3://vmerh/spring.jar /home/{{ lookup('env','APP_USER') }}/spring.jar"
+        become_user: "{{ lookup('env','APP_USER') }}"
+        environment:
+          AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+          AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
+          AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
+
+      - name: Get DB IP address
+        shell: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=Database Worker' --query 'Reservations[*].Instances[*].PrivateIpAddress' --output=text"
+        environment:
+          AWS_ACCESS_KEY_ID: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+          AWS_DEFAULT_REGION: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
+          AWS_SECRET_ACCESS_KEY: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
+        register: db_host
+
+      - name: Wait for DB to become ready
+        wait_for:
+          host: '{{ db_host.stdout }}'
+          port: 3306
+          state: started
+          delay: 5
+          connect_timeout: 15
+          timeout: 180
+
+      - name: Сheck if the java application is running
+        shell: 'ps aux | grep -v grep | grep "java -jar /home"'
+        register: java_run_status
+        ignore_errors : true
+        changed_when: false
+
+      - name: Run application
+        shell: 'java -jar *.jar &'
+        args:
+          chdir: "/home/{{ lookup('env','APP_USER') }}/"
+        become_user: "{{ lookup('env','APP_USER') }}"
+        async: 1000
+        poll: 0
+        environment:
+          DB_HOST: '{{ db_host.stdout }}'
+          DB_USER: "{{ lookup('env','DB_USER') }}"
+          DB_PASS: "{{ lookup('env','DB_PASS') }}"
+          DB_NAME: "{{ lookup('env','DB_NAME') }}"
+          DB_PORT: "{{ lookup('env','DB_PORT') }}"
+        when: not java_run_status.stdout
+
+      - name: Get my public IP from ipify.org
+        ipify_facts:
+        register: public_ip
+
+      - name: Wait for the application to start
+        wait_for:
+          timeout: 60
+          host: '{{ public_ip.ansible_facts.ipify_public_ip }}'
+          port: 8080
+        when: not java_run_status.stdout
+
+      - name: Application healthcheck
+        uri:
+          url: "http://{{ public_ip.ansible_facts.ipify_public_ip }}:8080/manage/health"
+          return_content: yes
+        register: health
+
+      - name: Сheck if the application is running on the port 8080
+        debug: msg='The application is running'
+        when: health.json.status == "UP"
