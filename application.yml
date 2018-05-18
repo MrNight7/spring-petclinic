@@ -52,3 +52,6 @@
           return_content: yes
         register: health
      
+      - name: Check Health
+        debug: msg='Build Work!'
+        when: health.json.status == "UP"
