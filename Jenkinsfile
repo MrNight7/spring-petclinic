@@ -17,31 +17,29 @@ pipeline {
         }
 
         stage('Provision') {
-            failFast true
-            parallel {
+            stage ('Database') {
+                    
+                agent { label 'database' }
+                    
+                    steps {
+                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
+                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/my.cnf'
+                        ansiblePlaybook(
+                                playbook: 'database.yml')
+                    }
+            }
 
-                stage ('Database') {
+            stage ('Application') {
                     
-                    agent { label 'database' }
+                agent { label 'application' }
                     
-                        steps {
-                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
-                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/my.cnf'
-                            ansiblePlaybook(
-                                    playbook: 'database.yml')
-                               }
-                }
-
-                stage ('Application') {
-                    
-                    agent { label 'application' }
-                    
-                        steps {
-                            sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
-                                ansiblePlaybook(
-                                    playbook: 'application.yml')
+                    steps {
+                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
+                        ansiblePlaybook(
+                                playbook: 'application.yml')
                         }
-                }
             }
         }
+        
+    }    
 }
