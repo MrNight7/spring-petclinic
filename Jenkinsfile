@@ -16,30 +16,27 @@ pipeline {
                 }
         }
 
-        stage('Provision') {
-            stage ('Database') {
+        stage ('Database') {
+               
+            agent { label 'database' }
                     
-                agent { label 'database' }
-                    
-                    steps {
-                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
-                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/my.cnf'
-                        ansiblePlaybook(
-                                playbook: 'database.yml')
-                    }
-            }
-
-            stage ('Application') {
-                    
-                agent { label 'application' }
-                    
-                    steps {
-                        sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
-                        ansiblePlaybook(
-                                playbook: 'application.yml')
-                        }
-            }
+                steps {
+                    sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/database.yml'
+                    sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/my.cnf'
+                    ansiblePlaybook(
+                            playbook: 'database.yml')
+                }
         }
-        
+
+        stage ('Application') {
+                    
+            agent { label 'application' }
+                    
+                steps {
+                    sh 'wget https://raw.githubusercontent.com/MrNight7/spring-petclinic/master/application.yml'
+                    ansiblePlaybook(
+                            playbook: 'application.yml')
+                }
+        }
     }    
 }
