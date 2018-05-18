@@ -44,16 +44,4 @@ pipeline {
                 }
             }
         }
-
-        stage ('Terminate instances') {
-            agent { label 'master' }
-                steps {
-                    sh """for i in \$(aws ec2 describe-instances \
-                    --filters 'Name=tag:Name,Values=*Worker' \
-                    --query 'Reservations[*].Instances[*].InstanceId' \
-                    --output=text); do aws ec2 terminate-instances \
-                    --instance-ids \$i; done"""
-                }
-        }
-    }
 }
